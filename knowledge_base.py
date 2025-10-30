@@ -10,53 +10,40 @@ from typing import Callable, Dict, List, Tuple, Optional, Any
 import json, math, re, textwrap, random, os, sys
 import math
 from collections import Counter, defaultdict
+import pandas as pd
 
-# A toy corpus mimicing the documents of Wikipedia
-CORPUS = [
-    {
-        "id": "doc1",
-        "title": "Vincent van Gogh",
-        "text": (
-            "Vincent van Gogh was a Dutch post-impressionist painter who is among the most famous and influential figures "
-            "in the history of Western art. He created about 2,100 artworks, including The Starry Night, while staying at "
-            "the Saint-Paul-de-Mausole asylum in Saint-Rémy-de-Provence in 1889."
-        ),
-    },
-    {
-        "id": "doc2",
-        "title": "The Starry Night",
-        "text": (
-            "The Starry Night is an oil-on-canvas painting by Dutch Post-Impressionist painter Vincent van Gogh. "
-            "Painted in June 1889, it depicts the view from the east-facing window of his asylum room at Saint-Rémy-de-Provence, "
-            "just before sunrise, with the addition of an ideal village."
-        ),
-    },
-    {
-        "id": "doc3",
-        "title": "Saint-Rémy-de-Provence",
-        "text": (
-            "Saint-Rémy-de-Provence is a commune in the Bouches-du-Rhône department in Southern France. The Saint-Paul-de-Mausole "
-            "asylum is located here, where Vincent van Gogh stayed and painted several works including The Starry Night."
-        ),
-    },
-    {
-        "id": "doc4",
-        "title": "Pythagorean theorem",
-        "text": (
-            "In mathematics, the Pythagorean theorem is a fundamental relation in Euclidean geometry among the three sides of a "
-            "right-angled triangle: the square of the hypotenuse equals the sum of the squares of the other two sides."
-        ),
-    },
-    {
-        "id": "doc5",
-        "title": "Claude Monet",
-        "text": (
-            "Claude Monet was a French painter, a founder of Impressionist painting. His works include the Water Lilies series, "
-            "Haystacks, and Impression, Sunrise."
-        ),
-    },
-    # A quick play around: Add some extra documents and watch how the GPT model explores, searches, and reasons through more scenarios in the final step.
-]
+
+dict_path = "yelp_academic_dataset_business.json"
+df = pd.read_json(dict_path, lines=True)
+
+# Create our corpus from the dataframe
+CORPUS = []
+
+for index, row in df.iterrows():
+    entry = {
+        "id": row["business_id"],
+        "title": row["name"],
+        "categories": row["categories"],
+        "address": row["address"],
+        "city": row["city"],
+        "state": row["state"],
+        "zip_code": row["postal_code"],
+        "stars": row["stars"],
+        "review_count": row["review_count"]
+    }
+
+    # Make all non-id or title fields into a single field called text
+    entry["text"] = " ".join(
+        [str(row[col]) for col in row.index if col not in ["business_id", "name"]]
+    )
+
+    # Remove other fields except id, title, text
+    keys_to_keep = ["id", "title", "text"]
+    entry = {k: v for k, v in entry.items() if k in keys_to_keep}
+
+    CORPUS.append(entry)
+
+print(CORPUS[:3])  # print only first 3 to avoid huge output
 
 # Then, we design a simple search method based on TF-IDF to retrieve information from the corpus.
 
@@ -87,12 +74,12 @@ VOCAB = sorted(set(t for doc in DOC_TOKENS for t in doc))
 def compute_tf(tokens: List[str]) -> Dict[str, float]:
     # Input: A list of all the words in a document
     # Output: A dictionary of the frequency of each word
+    counts = defaultdict(int)
+    for token in tokens:
+        counts[token] += 1
+    length = max(1, len(tokens))
+    return {token: counts[token] / length for token in counts}
 
-    # ===== TODO =====
-    # implement the function to compute normalized term frequency: count of word / doc length
-    
-    return {}
-    # ===== TODO =====
 
 
 
@@ -100,13 +87,11 @@ def compute_tf(tokens: List[str]) -> Dict[str, float]:
 def compute_df(doc_tokens: List[List[str]]) -> Dict[str, float]:
     # Input: A list of lists of tokens in each document
     # Output: A dictionary of the counts of each word appearing across the documents
-
-    # ===== TODO =====
-    # implement the function to compute document frequency: count of the word appearing in the documents
-    
-    # ===== TODO =====
-    return {}
-
+    df = defaultdict(int)
+    for tokens in doc_tokens:
+        for token in set(tokens):
+            df[token] += 1
+    return df
 #     Compute the inverse document frequency (higher for rarer terms), in which we use a smoothed variant
 DF = compute_df(DOC_TOKENS) # Get the DF
 N_DOC = len(DOC_TOKENS) # number of docs
@@ -133,16 +118,14 @@ def cosine(a: Dict[str, float], b: Dict[str, float]) -> float:
     if not a or not b:
         return 0.0
 
-    # ===== TODO =====
     # Compute the cosine similarity between two tf-idf vectors
     # Notice that they are two dictionaries and could have missing keys
-    
-    # compute dot product
-    
-    # compute norms
-    similarity = None
-    # ===== TODO =====
-    return similarity
+    # dot product
+    dot = sum(a.get(k, 0.0) * b.get(k, 0.0) for k in set(a) | set(b))
+    # norms
+    na = math.sqrt(sum(v*v for v in a.values()))
+    nb = math.sqrt(sum(v*v for v in b.values()))
+    return dot / (na * nb + 1e-12)
 
 
 # 6.   We implement a search method based on the cosine similarity, which finds the documents with the highest similarity scores as the top-k search results.
