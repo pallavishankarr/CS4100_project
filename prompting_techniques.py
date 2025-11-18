@@ -38,8 +38,10 @@ def convert_value(raw: str) -> Any:
     """
     raw = raw.strip()
     # Normalize JSON-like booleans
-    if raw.lower() == "true":  return True
-    if raw.lower() == "false": return False
+    if raw.lower() == "true":  
+        return True
+    if raw.lower() == "false": 
+        return False
     try:
         # Handles "..." / '...' / 123 / 4.5
         return ast.literal_eval(raw)
@@ -88,14 +90,42 @@ def parse_action(line: str) -> Optional[Tuple[str, Dict[str, Any]]]:
     name = None; args = None
 
     # 1) Must start with 'Action:'
+    line = line.strip()
+    if not line.startswith("Action:"):
+        return None
     
+    line = line[len("Action:"):].strip()
+
     # 2) Extract action name up to the first '['
     #    name must be non-empty and composed of letters/underscores (basic check)
+    bracket_pos = line.find('[')
+    if bracket_pos == -1:
+        return None
     
+    name = line[:bracket_pos].strip()
+
+    if not name or not re.match(r'^[A-Za-z_][A-Za-z0-9_]*$', name):
+        return None
+
     # 3) Inside brackets: key=value pairs separated by commas (quotes allowed)
-    
+    close_bracket_pos = line.rfind(']')
+    if close_bracket_pos == -1 or close_bracket_pos < bracket_pos:
+        return None
+
     # 4) Allow trailing whitespace after closing bracket only
+    after_bracket = line[close_bracket_pos+1:]
+    if after_bracket.strip():
+        return None
     
+    args_str = line[bracket_pos+1:close_bracket_pos].strip()
+
+    if args_str:
+        try:
+            args = split_args(args_str)
+        except Exception:
+            return None
+    else:
+        args = {}
     # ====== TODO ======
     return name, args
 
