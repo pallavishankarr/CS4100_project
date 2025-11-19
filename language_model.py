@@ -8,14 +8,6 @@ DTYPE        = torch.bfloat16 if torch.cuda.is_available() else torch.float32
 
 tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME, trust_remote_code=False)
 
-# ====== TODO ======
-# Load model with AutoModelForCausalLM.from_pretrained() from huggingface with the above MODEL_NAME, LOAD_8BIT, DTYPE
-model = None
-
-# Generation configuration: use GenerationConfig to define the generation parameters
-gen_cfg = None
-# ====== TODO ======
-
 # ====== Helper function: Enforce two-line schema in the decoding ======
 T_PATTERN = re.compile(r"Thought:\s*(.+)")
 A_PATTERN = re.compile(r"Action:\s*(.+)")
@@ -101,14 +93,9 @@ class HF_LLM:
         # We add a strong instruction to the prompt to improve compliance with the format
         full_prompt = prompt + self.format_guard
 
-        # ====== TODO ======
-        #     Here, let's write the code to use language model to generate the response given the full_prompt
-        #     First, we need to use the tokenizer to tokenize the prompt into pytorch tensors
-        #     Second, we need to use model.generate() to generate the model response (which includes the Thought and Action)
         inputs = self.tokenizer(full_prompt, return_tensors="pt").to(self.model.device)
         with torch.no_grad():
             output_ids = self.model.generate(**inputs, generation_config=self.gen_cfg)
-        # ====== TODO ======
 
 
         # Slice off the prompt tokens to get only the completion

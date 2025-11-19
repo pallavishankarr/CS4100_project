@@ -84,11 +84,13 @@ def parse_action(line: str) -> Optional[Tuple[str, Dict[str, Any]]]:
       Action: finish[answer="Vincent van Gogh."]
     Returns (action_name, args_dict) or None on invalid input.
     """
-    # ====== TODO ======
     #     Use the parse_args function above to write a function that converts an action string to a function call
     #     Return the name of the function and the args
     name = None; args = None
 
+    if not line:
+        return None
+    
     # 1) Must start with 'Action:'
     line = line.strip()
     if not line.startswith("Action:"):
@@ -126,7 +128,6 @@ def parse_action(line: str) -> Optional[Tuple[str, Dict[str, Any]]]:
             return None
     else:
         args = {}
-    # ====== TODO ======
     return name, args
 
 
