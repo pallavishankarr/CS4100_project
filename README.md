@@ -1,78 +1,103 @@
 # Business Info Retrieval Agent Using Yelp Data
 
+## Abstract
+This project builds an Information Retrieval Agent that answers natural language queries about local business by combining iterative reasoning with information retrieval from a Yelp business dataset. The agent uses a Qwen 2.5-0.5B instruction-tuned language model to generate explicit reasoning steps and search actions, then retrieves relevant business information based on a corpus of 500 Yelp business. 
+
+**NEED TO ADD OUTCOMES AFTER TESTING**
+
 ## Overview
 
 This project focuses on building an **Information Retrieval Agent** that processes natural language queries and returns structured, relevant business information using Yelp data. Yelp's extensive dataset contains millions of reviews and rich business metadata, making it a strong foundation for developing intelligent search and recommendation systems.
 
-Users often face challenges such as:
+### Problem Statement
+ Users face challenges quickly finding relevant businesses, extracting meaningful insights from large volumes of reviews, and narrowing results efficiently when prompts involve multiple factors such as ambience, location, and price. Users need a system that can answer natural language queries like "What is the best CHinese restaurant in South End of Boston?" by resoning through multiple steps and retreiving relevant business information from an external knowledge base. This agent aims to solve those problems by combining NLP, cosine similarity search, and Yelp datasets to deliver accurate and contextual results.
 
-* Quickly finding relevant businesses
-* Extracting meaningful insights from large volumes of reviews
-* Narrowing results efficiently when prompts involve multiple factors (e.g., ambience, location, price)
+### Why This Problem Is Interesting
+This problem is interesting because it highlights a broader challenge faced by many information systems today: making unstructured, test-heavy data easily acessible and searchable for everyday uesrs. This problem is also interesting because our solutionc an be expanded in the future to support a variety of more advanced capabilities such as personalized recommendations based on user history, automatically summarizing review sentiment, detecting emerging trends in local business and more. 
 
-This agent aims to solve those problems by combining NLP, cosine similarity search, and Yelp datasets to deliver accurate and contextual results.
+### Approach and Methodology 
+To address this, we combine:
+* NLP for query understanding
+* TF-IDF or embedding-based cosine similarity search
+* LLM-based reasoning for iterative retrieval stps
 
----
+### Rationale 
 
-## Features
-
+### Key Components
 * **Natural Language Query Parsing**: Uses NLP techniques to extract intent and key parameters from user input.
 * **Cosine Similarity Search**: Computes similarity between query vectors and business/review embeddings using TF-IDF or similar methods.
 * **Structured Output**: Returns relevant business options along with summarized insights.
 * **Highly Extensible**: Supports future additions like business recommendations, review summarization, and advanced feature extraction.
 
----
-
-## System Architecture
-
-```
-Yelp Data (Reviews + Business Attributes)
-                ↓
-        NLP Query Parsing
-                ↓
-        Parameter Extraction
-                ↓
-Cosine Similarity Search (TF-IDF or embeddings)
-                ↓
-    Structured Results + Insights Display
-```
-
-### Components
-
-* **Data Layer**: Accesses Yelp business metadata, reviews, and attributes.
-* **NLP Layer**: Identifies user intent, filters, and key features.
-* **Search Layer**: Uses cosine similarity to match query meaning to relevant business/review data.
-* **Output Layer**: Presents a structured and user-friendly response.
+### Limitations
+* No semantic embedding search
+* No structured metadata filtering
+* Limited to 500 business subset
+* Small model may misinterpret some queries
 
 ---
+## Approach and Methodology
 
-## Why Yelp Data?
+### Overall Pipeline
+User Query
+     ↓
+LLM Reasoning (Qwen 0.5B)
+     ↓
+Generate Search Action
+     ↓
+TF-IDF Vectorization of Query
+     ↓
+Cosine Similarity Search over Yelp Corpus
+     ↓
+Top-k Relevant Businesses Returned
+     ↓
+LLM Synthesizes Final Structured Answer
+     ↓
+Output to User
 
+### Model/Method Choices
+* Qwen 2.5-0.5B Instruct for reasoning and action planning
+* TF-IDF vectorization for baseline semantic similarity 
+* Cosine similarity for ranking
+* Yelp metadata filtering for narrowing candidates
+
+### Assumptions and Design Choices
+* User queries are assumed to containe actionable attributes
+* TF-IDF is sufficient for baseline retrieval due to limited dataset size
+* Small LLMs are chosen for efficiency rather than state-of-the-art performance
+
+### Limitations
+* Small model size may limit reasoning sophistication
+* TF-IDF lacks deep semantic understanding compared to embeddings
+* Dataset contains only 500 businesses, limiting coverage
+
+## Experiment Setup
+
+### Dataset
+The project uses a subset of the Yelp Open Dataset, consisting of:
+* 500 businesses
+* Business attributes: name, location (address, city, state, postal code), stars, number of reviews,  attributes (ex. Accepts Credit Card), categories (ex. Accupuncture, Hours)
+
+#### Why Yelp Data?
 * Large-scale, real-world dataset
 * Includes business entities, detailed attributes, and millions of user-generated reviews
 * Enables robust experimentation with text analysis and search methods
 * Provides realistic scenarios for user-facing applications
 
----
+### Implementation
+* Python-based pipeline
+* TF-IDF vectorizer 
+* Cosine similarity scoring
+* Qwen 2.5-0.5B instruction LM for decision-making
 
-## Technologies Used
+### Environment
+* CPU-based experimentation
+* Local development environment/Jupyter Notebook
 
-* **Python**
-* **NLP Libraries** (spaCy, NLTK, or similar)
-* **TF-IDF Vectorization**
-* **Cosine Similarity Search**
-* **Provided Starter Code** (Included in assignment/project resources)
-
----
-
-## Potential Extensions
-
-* Business recommendation engine
-* Sentiment and topic summarization for reviews
-* Feature extraction (e.g., parking availability, ambience descriptors)
-* Ranking models using ML or embeddings
-
----
+### Model Architecture
+* LLM reasoning module: Receives query -> outputs reasoning steps -> triggers search
+* Retrieval module: TF-IDF -> similarity matrix -> top-k results
+* Fusion module: LLM formats final structured output
 
 ## Getting Started
 
@@ -81,8 +106,6 @@ Cosine Similarity Search (TF-IDF or embeddings)
 3. Build TF-IDF vectors for reviews or combined features
 4. Implement cosine similarity retrieval
 5. Build structured output format for user queries
-
----
 
 ## Example Query
 
@@ -95,13 +118,21 @@ Cosine Similarity Search (TF-IDF or embeddings)
 * Ranked businesses based on similarity + filters
 * Display summary insights (price, review sentiments, attributes)
 
----
+## Discussion
+
+## Conclusion
+
+## Potential Extensions
+
+* Business recommendation engine
+* Sentiment and topic summarization for reviews
+* Feature extraction (e.g., parking availability, ambience descriptors)
+* Ranking models using ML or embeddings
 
 ## License
 
 This project is for academic and research purposes.
 
----
 
 ## Acknowledgments
 
