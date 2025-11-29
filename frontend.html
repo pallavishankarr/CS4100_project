@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Info Retrieval Agent</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // QueryBar Component
+        const QueryBar = ({ onQuery, loading }) => {
+            const [query, setQuery] = useState("");
+            const [topK, setTopK] = useState(5);
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                if (query.trim()) {
+                    onQuery(query.trim(), topK);
+                }
+            };
+
+            return (
+                <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        <div>
+                            <label htmlFor="query" className="block text-sm font-medium text-gray-700 mb-2">
+                                Enter your business query
+                            </label>
+                            <input
+                                id="query"
+                                type="text"
+                                value={query}
+                                onChange={(e) => setQuery(e.target.value)}
+                                placeholder="e.g., Best Chinese restaurant in South End of Boston"
+                                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                disabled={loading}
+                            />
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2">
+                                <label htmlFor="topK" className="text-sm font-medium text-gray-700">
+                                    Top K:
+                                </label>
+                                <input
+                                    id="topK"
+                                    type="number"
+                                    min="1"
+                                    max="20"
+                                    value={topK}
+                                    onChange={(e) => setTopK(parseInt(e.target.value) || 5)}
+                                    className="w-20 px-2 py-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                                    disabled={loading}
+                                />
+                            </div>
+                            <button
+                                type="submit"
+                                disabled={loading || !query.trim()}
+                                className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                            >
+                                {loading ? "Searching..." : "Search"}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            );
+        };
+
+        // ReasoningPanel Component
+        const ReasoningPanel = ({ reasoning }) => {
+            const [isOpen, setIsOpen] = useState(true);
+
+            if (!reasoning || reasoning.length === 0) {
+                return null;
+            }
+
+            return (
+                <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+                    <button
+                        onClick={() => setIsOpen(!isOpen)}
+                        className="w-full flex items-center justify-between text-left"
+                    >
+                        <h2 className="text-lg font-semibold text-gray-800">
+                            LLM Reasoning Steps ({reasoning.length})
+                        </h2>
+                        <span className="text-gray-500">
+                            {isOpen ? "▼" : "▶"}
+                        </span>
+                    </button>
+                    {isOpen && (
+                        <div className="mt-4 space-y-3 custom-scrollbar max-h-64 overflow-y-auto">
+                            {reasoning.map((step, idx) => (
+                                <div key={idx} className="bg-gray-50 p-3 rounded border-l-4 border-blue-500">
+                                    <div className="text-sm font-medium text-gray-700 mb-1">
+                                        Step {idx + 1}
+                                    </div>
+                                    <div className="text-gray-600 text-sm">{step}</div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        // ResultCard Component
+        const ResultCard = ({ business }) => {
+            const [showDetails, setShowDetails] = useState(false);
+
+            const renderStars = (stars) => {
+                const fullStars = Math.floor(stars);
+                const hasHalf = stars % 1 >= 0.5;
+                return (
+                    <div className="flex items-center gap-1">
+                        {[...Array(5)].map((_, i) => {
+                            if (i < fullStars) {
+                                return <span key={i} className="text-yellow-400">★</span>;
+                            } else if (i === fullStars && hasHalf) {
+                                return <span key={i} className="text-yellow-400">☆</span>;
+                            } else {
+                                return <span key={i} className="text-gray-300">★</span>;
+                            }
+                        })}
+                        <span className="ml-2 text-sm text-gray-600">({stars.toFixed(1)})</span>
+                    </div>
+                );
+            };
+
+            return (
+                <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+                    <div className="flex justify-between items-start mb-3">
+                        <div className="flex-1">
+                            <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                                {business.name}
+                            </h3>
+                            {renderStars(business.stars)}
+                        </div>
+                        <div className="text-right">
+                            <div className="text-sm text-gray-500">Similarity</div>
+                            <div className="text-lg font-semibold text-blue-600">
+                                {(business.similarity_score * 100).toFixed(1)}%
+                            </div>
+                        </div>
+                    </div>
+
+                    {business.address && (
+                        <div className="text-gray-600 mb-3">
+                            📍 {business.address}
+                        </div>
+                    )}
+
+                    {business.categories && business.categories.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mb-3">
+                            {business.categories.map((cat, idx) => (
+                                <span
+                                    key={idx}
+                                    className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
+                                >
+                                    {cat}
+                                </span>
+                            ))}
+                        </div>
+                    )}
+
+                    <div className="text-gray-700 mb-4">
+                        {business.summary}
+                    </div>
+
+                    <button
+                        onClick={() => setShowDetails(!showDetails)}
+                        className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                    >
+                        {showDetails ? "Hide Details" : "View Details"} ▼
+                    </button>
+
+                    {showDetails && (
+                        <div className="mt-3 pt-3 border-t border-gray-200">
+                            <div className="text-sm text-gray-600 space-y-1">
+                                <div><strong>Business ID:</strong> {business.business_id}</div>
+                                <div><strong>Similarity Score:</strong> {business.similarity_score.toFixed(4)}</div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        // ResultsList Component
+        const ResultsList = ({ results }) => {
+            if (!results || results.length === 0) {
+                return (
+                    <div className="bg-white rounded-lg shadow-md p-8 text-center text-gray-500">
+                        No results found. Try a different query.
+                    </div>
+                );
+            }
+
+            return (
+                <div className="space-y-4">
+                    <h2 className="text-2xl font-bold text-gray-800 mb-4">
+                        Results ({results.length})
+                    </h2>
+                    {results.map((business, idx) => (
+                        <ResultCard key={business.business_id || idx} business={business} />
+                    ))}
+                </div>
+            );
+        };
+
+        // Main App Component
+        const App = () => {
+            const [loading, setLoading] = useState(false);
+            const [reasoning, setReasoning] = useState(null);
+            const [results, setResults] = useState([]);
+            const [error, setError] = useState(null);
+
+            const API_URL = "http://localhost:8000/api/query";
+
+            const handleQuery = async (query, topK) => {
+                setLoading(true);
+                setError(null);
+                setReasoning(null);
+                setResults([]);
+
+                try {
+                    const response = await fetch(API_URL, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            query: query,
+                            top_k: topK,
+                        }),
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    setReasoning(data.reasoning || null);
+                    setResults(data.retrieved || []);
+                } catch (err) {
+                    setError(err.message);
+                    console.error("Error fetching results:", err);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            return (
+                <div className="container mx-auto px-4 py-8 max-w-6xl">
+                    <header className="mb-8">
+                        <h1 className="text-4xl font-bold text-gray-800 mb-2">
+                            Business Info Retrieval Agent
+                        </h1>
+                        <p className="text-gray-600">
+                            Find local businesses using natural language queries powered by LLM reasoning and TF-IDF retrieval
+                        </p>
+                    </header>
+
+                    <QueryBar onQuery={handleQuery} loading={loading} />
+
+                    {error && (
+                        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
+                            <strong>Error:</strong> {error}
+                            <div className="text-sm mt-2">
+                                Make sure the API server is running on http://localhost:8000
+                            </div>
+                        </div>
+                    )}
+
+                    {loading && (
+                        <div className="bg-white rounded-lg shadow-md p-8 text-center">
+                            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                            <p className="mt-4 text-gray-600">Processing your query...</p>
+                        </div>
+                    )}
+
+                    {!loading && !error && (
+                        <>
+                            <ReasoningPanel reasoning={reasoning} />
+                            <ResultsList results={results} />
+                        </>
+                    )}
+                </div>
+            );
+        };
+
+        // Render the app
+        const root = ReactDOM.createRoot(document.getElementById("root"));
+        root.render(<App />);
+    </script>
+</body>
+</html>
+

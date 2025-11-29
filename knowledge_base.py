@@ -37,8 +37,8 @@ for index, row in df.iterrows():
         [str(row[col]) for col in row.index if col not in ["business_id", "name"]]
     )
 
-    # Remove other fields except id, title, text
-    keys_to_keep = ["id", "title", "text"]
+    # Keep id, title, text, and metadata fields for API responses
+    keys_to_keep = ["id", "title", "text", "address", "stars", "categories", "city", "state", "zip_code", "review_count"]
     entry = {k: v for k, v in entry.items() if k in keys_to_keep}
 
     CORPUS.append(entry)
@@ -143,14 +143,31 @@ def search_corpus(query: str, k: int = 3) -> List[Dict[str, Any]]:
 #       Integrate the search method as a tool
 def tool_search(query: str, k: int = 3) -> Dict[str, Any]:
     hits = search_corpus(query, k=k)
-    # Return a concise, citation-friendly payload
+    # Return a concise, citation-friendly payload with metadata
+    results = []
+    for h in hits:
+        result = {
+            "id": h["id"],
+            "title": h["title"],
+            "snippet": h["text"][:240] + ("..." if len(h["text"]) > 240 else ""),
+            "score": h.get("score", 0.0)
+        }
+        # Add metadata if available
+        if "address" in h:
+            result["address"] = h["address"]
+        if "stars" in h:
+            result["stars"] = h["stars"]
+        if "categories" in h:
+            result["categories"] = h["categories"] if isinstance(h["categories"], list) else (h["categories"].split(", ") if h["categories"] else [])
+        if "city" in h:
+            result["city"] = h["city"]
+        if "state" in h:
+            result["state"] = h["state"]
+        results.append(result)
     return {
         "tool": "search",
         "query": query,
-        "results": [
-            {"id": h["id"], "title": h["title"], "snippet": h["text"][:240] + ("..." if len(h["text"]) > 240 else "")}
-            for h in hits
-        ],
+        "results": results,
     }
 
 TOOLS = {

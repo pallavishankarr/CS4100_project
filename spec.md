@@ -292,6 +292,53 @@ GET /api/health
 
 POST /api/query { query: string }
 
+
+
+Part H — Frontend (Added)
+H1. Purpose
+Provide a lightweight, responsive frontend that demonstrates the IR agent in action. It should allow users to enter natural language queries, view LLM reasoning steps, and inspect retrieved business results with metadata and similarity scores.
+
+
+H2. Tech Stack
+- React (single-file demo component for rapid prototyping)
+- Tailwind CSS for styling (utility-first; no external styles required)
+- Fetch API to call backend endpoints (e.g., POST /api/query)
+- Optional: Vite or Create React App for local dev
+
+
+H3. Pages & Components (single-demo file)
+- QueryBar: input + top_k control + submit button
+- ReasoningPanel: displays LLM reasoning steps (collapsible)
+- ResultsList: list of BusinessResult cards with name, stars, categories, address, similarity_score, and LLM summary
+- ResultCard: single business display with 'View Reviews' toggle showing top review snippets
+- Loading & Error states
+
+
+H4. UX Flow
+1. User enters a query and optionally top_k (default 5).
+2. Frontend posts to POST /api/query with JSON { query, top_k }.
+3. Backend returns { reasoning, retrieved }.
+4. Frontend shows reasoning (if present) and a ranked list of results.
+5. User can click a ResultCard for more metadata or to copy address.
+
+
+H5. Accessibility & Responsiveness
+- Keyboard-accessible inputs and buttons
+- Responsive grid/list layout for cards
+
+
+H6. Integration Contract (API)
+POST /api/query
+Request: { query: string, top_k?: number }
+Response: { reasoning?: string[], retrieved: BusinessResult[] }
+BusinessResult: { business_id, name, address, stars, categories, similarity_score, summary }
+
+
+H7. Demo Constraints & Goals
+- Keep the UI small (single-file demo), no build-time dependencies required other than standard React + Tailwind.
+- Demonstrate reasoning + retrieval side-by-side.
+- Be presentable for a class demo or slide recording.
+
 Part G — System Prompt for Cursor
 SYSTEM
 You are an experienced ML engineer. Your job is to turn the attached spec.md into a functional IR agent using Yelp data.
@@ -313,4 +360,6 @@ Workflow:
    WHAT I DID
    WHAT I NEED NEXT
 
+
+implement front end
 END OF SPEC
