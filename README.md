@@ -101,6 +101,51 @@ The project uses a subset of the Yelp Open Dataset, consisting of:
 
 ## Getting Started
 
+### Installation
+
+1. Install required dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+### Running the Application
+
+The application consists of a backend API server and a frontend interface. You'll need to run both:
+
+#### 1. Start the Backend API Server
+
+In one terminal window, start the API server:
+```bash
+python start_server.py
+```
+
+The API server will be available at:
+- API endpoint: `http://localhost:8000`
+- API documentation: `http://localhost:8000/docs`
+
+#### 2. Start the Frontend
+
+In a separate terminal window, start a simple HTTP server to serve the frontend:
+
+**Option A: Using Python's built-in HTTP server (Python 3)**
+```bash
+python -m http.server 3000
+```
+
+**Option B: Using Python's built-in HTTP server (Python 2)**
+```bash
+python -m SimpleHTTPServer 3000
+```
+
+Then open your browser and navigate to:
+```
+http://localhost:3000/frontend.html
+```
+
+The frontend will connect to the backend API running on port 8000.
+
+### Development Workflow
+
 1. Load Yelp dataset (businesses + reviews + attributes)
 2. Process text using NLP pipeline for cleaning + entity extraction
 3. Build TF-IDF vectors for reviews or combined features
