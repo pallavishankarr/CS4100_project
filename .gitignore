@@ -47,3 +47,7 @@ Thumbs.db
 # Model cache (if using transformers)
 .cache/
 models/
+
+# Data
+data/
+yelp_academic_dataset_business.json
