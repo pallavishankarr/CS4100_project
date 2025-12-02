@@ -13,7 +13,9 @@ from collections import Counter, defaultdict
 import pandas as pd
 
 
-dict_path = "yelp_academic_dataset_business.json"
+# Get the project root directory (two levels up from src/)
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+dict_path = os.path.join(project_root, "data", "yelp_academic_dataset_business.json")
 df = pd.read_json(dict_path, lines=True)
 
 # Create our corpus from the dataframe

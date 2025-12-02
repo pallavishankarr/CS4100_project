@@ -99,6 +99,33 @@ The project uses a subset of the Yelp Open Dataset, consisting of:
 * Retrieval module: TF-IDF -> similarity matrix -> top-k results
 * Fusion module: LLM formats final structured output
 
+## Project Structure
+
+```
+CS4100_project/
+├── src/                    # Python source code
+│   ├── __init__.py
+│   ├── agent_system.py     # ReAct agent implementation
+│   ├── api.py              # FastAPI backend server
+│   ├── knowledge_base.py   # TF-IDF search and corpus management
+│   ├── language_model.py   # Qwen LLM wrapper
+│   └── prompting_techniques.py  # Prompt formatting and parsing
+├── static/                 # Frontend files
+│   └── frontend.html       # React-based web interface
+├── data/                   # Data files
+│   └── yelp_academic_dataset_business.json
+├── docs/                   # Documentation
+│   ├── Course-Project-Handout.ipynb
+│   ├── course-project-introduction.pptx
+│   ├── spec.md
+│   └── Resources/
+├── scripts/                # Utility scripts
+│   └── start_server.py     # Server startup script
+├── run.sh                  # Easy run script (starts both servers)
+├── requirements.txt        # Python dependencies
+└── README.md              # This file
+```
+
 ## Getting Started
 
 ### Installation
@@ -110,39 +137,46 @@ pip install -r requirements.txt
 
 ### Running the Application
 
-The application consists of a backend API server and a frontend interface. You'll need to run both:
+The easiest way to run the application is using the provided `run.sh` script, which starts both the backend API server and frontend server:
 
-#### 1. Start the Backend API Server
-
-In one terminal window, start the API server:
 ```bash
-python start_server.py
+./run.sh
 ```
 
-The API server will be available at:
-- API endpoint: `http://localhost:8000`
-- API documentation: `http://localhost:8000/docs`
-
-#### 2. Start the Frontend
-
-In a separate terminal window, start a simple HTTP server to serve the frontend:
-
-**Option A: Using Python's built-in HTTP server (Python 3)**
-```bash
-python -m http.server 3000
-```
-
-**Option B: Using Python's built-in HTTP server (Python 2)**
-```bash
-python -m SimpleHTTPServer 3000
-```
+This will start:
+- **Backend API Server** at `http://localhost:8000`
+- **Frontend Server** at `http://localhost:3000`
 
 Then open your browser and navigate to:
 ```
 http://localhost:3000/frontend.html
 ```
 
-The frontend will connect to the backend API running on port 8000.
+#### Manual Setup (Alternative)
+
+If you prefer to run the servers manually:
+
+**1. Start the Backend API Server:**
+```bash
+python scripts/start_server.py
+```
+
+The API server will be available at:
+- API endpoint: `http://localhost:8000`
+- API documentation: `http://localhost:8000/docs`
+
+**2. Start the Frontend Server:**
+
+In a separate terminal window:
+```bash
+cd static
+python -m http.server 3000
+```
+
+Then open your browser and navigate to:
+```
+http://localhost:3000/frontend.html
+```
 
 ### Development Workflow
 
